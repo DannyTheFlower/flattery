@@ -1,4 +1,5 @@
 import requests
+import sqlite3
 from bs4 import BeautifulSoup
 
 
@@ -65,5 +66,31 @@ def process_all_pages(start_url):
             return {'link': links, 'metro': metro_stations, 'price': prices, 'photo': photos}
 
 
+def get_image_from_url(url):
+    response = requests.get(url)
+    return response.content
+
+
 start_url = "https://spb.cian.ru/cat.php?deal_type=rent&engine_version=2&offer_type=flat&region=2&room1=1&room2=1" \
             "&room3=1&room4=1&room5=1&room6=1&room7=1&room9=1&type=4"
+data = process_all_pages(start_url)
+
+conn = sqlite3.connect('rentals.db')
+cursor = conn.cursor()
+cursor.execute("""
+    CREATE TABLE rentals (
+        link TEXT,
+        metro TEXT,
+        price TEXT,
+        photo BLOB
+    )
+""")
+conn.commit()
+
+for link, metro, price, photo_urls in zip(data['link'], data['metro'], data['price'], data['photo']):
+    for photo_url in photo_urls:
+        photo = get_image_from_url(photo_url)
+        cursor.execute("INSERT INTO rentals VALUES (?, ?, ?, ?)", (link, metro, price, photo))
+conn.commit()
+
+conn.close()
