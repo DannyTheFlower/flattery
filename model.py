@@ -24,7 +24,8 @@ def extract_features(img_array):
 def add_photo(id, features):
     conn = sqlite3.connect('rentals.db')
     cur = conn.cursor()
-    cur.execute("INSERT INTO photos (id, features) VALUES (?, ?)", (id, features.tobytes()))
+    features_string = features.tobytes()
+    cur.execute("INSERT INTO photos (id, features) VALUES (?, ?)", (id, features_string))
     conn.commit()
     conn.close()
 
@@ -48,7 +49,7 @@ def create_features_table():
     cur.execute("""
         CREATE TABLE photos (
             id INTEGER PRIMARY KEY,
-            features BLOB
+            features STRING
         )
     """)
     conn.close()
@@ -61,7 +62,7 @@ def find_similar_images(input_img):
     db_features = []
     ids = []
     for row in cur.fetchall():
-        features = np.fromstring(row[1], dtype=np.float32, sep=',')
+        features = np.frombuffer(row[1], dtype=np.float32)
         db_features.append(features)
         ids.append(row[0])
     conn.close()
@@ -73,8 +74,10 @@ def find_similar_images(input_img):
     return similar_image_ids
 
 
+"""
 create_features_table()
 photos = get_photos()
 for i, photo in enumerate(photos):
     features = extract_features(photo)
     add_photo(i + 1, features)
+"""
