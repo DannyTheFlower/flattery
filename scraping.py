@@ -79,6 +79,7 @@ conn = sqlite3.connect('rentals.db')
 cursor = conn.cursor()
 cursor.execute("""
     CREATE TABLE rentals (
+        id INTEGER PRIMARY KEY,
         link TEXT,
         metro TEXT,
         price TEXT,
